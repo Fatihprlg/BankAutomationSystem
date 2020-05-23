@@ -567,14 +567,21 @@ void hesap_sil(int hesapID)
     fclose(gecicihesap);
     remove("hesaplar.txt");
     rename("hesaplartmp.txt", "hesaplar.txt");
+    printf("\nHesap basariyla silindi!");
+    printf("\nAna menuye yonlendiriliyorsunuz...");
+    Sleep(4000);
+
 }
 
 void hesap_ozet(int hesapID)
 {
     FILE *dekontac;
     struct ozhesap ozethesap;
+    char menu_secimi;
     ozethesap.islemTuru = malloc(sizeof(char) * 25);
     dekontac = fopen("dekont.txt", "r");
+
+    printf("\t\t\tHESAP OZETI");
     if (dekontac == NULL)
     {
         printf("Hesap ozetiniz bulunmamaktadir.");
@@ -588,6 +595,9 @@ void hesap_ozet(int hesapID)
             printf("\n\n%d.%d.%d\t%d\t%s\t%f\t%d\n", ozethesap.gun, ozethesap.ay, ozethesap.yil, ozethesap.hesapNo, ozethesap.islemTuru, ozethesap.bakiye, ozethesap.havaleHesapNo);
         }
     }
+    fflush(stdin);
+    printf("\nAna menuye donmek icin herhangi bir tusa basiniz->");
+    scanf("%c", &menu_secimi);
 }
 
 void musteriEkleme()
