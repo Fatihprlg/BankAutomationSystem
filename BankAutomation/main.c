@@ -18,12 +18,23 @@ struct musteri
     int musteriID, sifre, limit;
 };
 
+struct ozhesap
+{
+    int gun, ay, yil;
+    int hesapNo, havaleHesapNo;
+    char *islemTuru;
+    float bakiye;
+};
+
 struct hesap
 {
     int hesapID, musteriID;
     struct tarih acilmaTarihi;
     float bakiye;
 };
+
+int musteri_id_cookie = 0;
+int hesap_id_cookie = 0;
 
 int havaleHesapKontrol(int hesapNo)
 {
@@ -54,9 +65,9 @@ int paraUstuTamamlama(int musteriNo, int hesapNo, float miktar)
         return 0;
 }
 
-void paraCekme(int musteriNo)
+void paraCekme(int musteriNo, int hesapNo)
 {
-    int hesapVar = 0, hesapNo, bakiyeYeterli = 0, limit, tercih = 0, paraUstuKontrol = 0;
+    int hesapVar = 0, limit, tercih = 0, paraUstuKontrol = 0;
     float islemMiktari;
     FILE *musteri, *hesap, *yeniHesap, *dekont;
     struct hesap islem1;
@@ -67,7 +78,7 @@ void paraCekme(int musteriNo)
 
     time(&t);
     zaman = localtime(&t);
-    if (musteri < 55555)
+    if (musteriNo < 55555)
         musteri = fopen("ticariMusteri.txt", "r");
     else
         musteri = fopen("bireyselMusteri.txt", "r");
@@ -80,8 +91,6 @@ void paraCekme(int musteriNo)
     }
     fclose(musteri);
 
-    printf("\nIslem yapmak istediginiz hesap numarasini giriniz-> ");
-    scanf("%d", &hesapNo);
 
     hesap = fopen("hesaplar.txt", "r");
     yeniHesap = fopen("islem1.txt", "w");
@@ -137,8 +146,7 @@ void paraCekme(int musteriNo)
         }
     }
 
-    fclose(hesap);
-    fclose(yeniHesap);
+    _fcloseall();
 
     remove("hesaplar.txt");
     rename("islem1.txt", "hesaplar.txt");
@@ -181,29 +189,27 @@ void paraCekme(int musteriNo)
         time(&t);
         zaman = localtime(&t);
         dekont = fopen("dekont.txt", "a");
-        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year, hesapNo, "Para_cekme", 0 - islemMiktari, 0);
+        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesapNo, "Para_cekme", 0 - islemMiktari, 0);
         fclose(dekont);
     }
     else
         printf("\nBir hata olustu!");
 
     int anaMenu;
-    printf("Tekrar denemek için 1, ana menuye donmek icin herhangi bir tusa basiniz->");
+    printf("\nTekrar denemek icin 1, ana menuye donmek icin herhangi bir tusa basiniz->");
     scanf("%d", &anaMenu);
-    if (anaMenu)
-        paraCekme(musteriNo);
+    if (anaMenu == 1)
+        paraCekme(musteriNo, hesapNo);
 }
 
-void paraYatirma()
+void paraYatirma(int hesapNo)
 {
     FILE *hesap, *yeniHesap, *dekont;
-    int hesapNo, hesapVar = 0;
+    int hesapVar = 0;
     float islemMiktari;
     struct hesap islem2;
     time(&t);
     zaman = localtime(&t);
-    printf("\nPara yatirmak istediginiz hesap numarasini giriniz-> ");
-    scanf("%d", &hesapNo);
     hesap = fopen("hesaplar.txt", "r");
     yeniHesap = fopen("yeniHesap.txt", "w");
     while (fscanf(hesap, "%d %d %d/%d/%d %f", &islem2.musteriID, &islem2.hesapID, &islem2.acilmaTarihi.gun, &islem2.acilmaTarihi.ay, &islem2.acilmaTarihi.yil, &islem2.bakiye) != EOF)
@@ -215,8 +221,12 @@ void paraYatirma()
             scanf("%f", &islemMiktari);
             islem2.bakiye += islemMiktari;
             printf("\nPara yatirma islemi basarili!");
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
         }
-        fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
+        else
+        {
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
+        }
     }
     fclose(hesap);
     fclose(yeniHesap);
@@ -227,28 +237,26 @@ void paraYatirma()
         time(&t);
         zaman = localtime(&t);
         dekont = fopen("dekont.txt", "a");
-        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year, hesapNo, "Para_Yatirma", islemMiktari, 0);
+        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesapNo, "Para_Yatirma", islemMiktari, 0);
         fclose(dekont);
     }
     else
         printf("\nHesap bulunamadi!");
     int anaMenu;
-    printf("Tekrar denemek için 1, ana menuye donmek icin herhangi bir tusa basiniz->");
+    printf("\nTekrar denemek icin 1, ana menuye donmek icin herhangi bir tusa basiniz->");
     scanf("%d", &anaMenu);
-    if (anaMenu)
-        paraYatirma();
+    if (anaMenu == 1)
+        paraYatirma(hesapNo);
 }
 
-void havale(int musteriNo)
+void havale(int musteriNo, int hesapNo)
 {
     FILE *hesap, *yeniHesap, *dekont;
-    int hesapNo, hesapNoKontrol = 0, havaleHesapNo, havaleBasarili = 0, hesapVar = 0;
+    int hesapNoKontrol = 0, havaleHesapNo, havaleBasarili = 0, hesapVar = 0;
     float islemMiktari;
     struct hesap islem3;
     time(&t);
     zaman = localtime(&t);
-    printf("\nHavale isleminde kullanilacak hesap numarasini giriniz-> ");
-    scanf("%d", &hesapNo);
     hesap = fopen("hesaplar.txt", "r");
     yeniHesap = fopen("yeniHesap.txt", "w");
     while (fscanf(hesap, "%d %d %d/%d/%d %f", &islem3.musteriID, &islem3.hesapID, &islem3.acilmaTarihi.gun, &islem3.acilmaTarihi.ay, &islem3.acilmaTarihi.yil, &islem3.bakiye) != EOF)
@@ -257,11 +265,11 @@ void havale(int musteriNo)
         {
             hesapVar = 1;
             printf("\nHavale yapilacak hesap numarasini giriniz->");
-            scanf("%f", &havaleHesapNo);
+            scanf("%d", &havaleHesapNo);
             hesapNoKontrol = havaleHesapKontrol(havaleHesapNo);
             if (hesapNoKontrol)
             {
-                printf("\nYatirmak istediginiz tutari giriniz-> ");
+                printf("\nGondermek istediginiz tutari giriniz-> ");
                 scanf("%f", &islemMiktari);
                 if (islemMiktari <= islem3.bakiye)
                 {
@@ -279,10 +287,9 @@ void havale(int musteriNo)
                 printf("\nGecersiz hesap numarasi!!");
             }
         }
-        fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem3.musteriID, islem3.hesapID, islem3.acilmaTarihi.gun, islem3.acilmaTarihi.ay, islem3.acilmaTarihi.yil, islem3.bakiye);
+        fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem3.musteriID, islem3.hesapID, islem3.acilmaTarihi.gun, islem3.acilmaTarihi.ay, islem3.acilmaTarihi.yil, islem3.bakiye);
     }
-    fclose(hesap);
-    fclose(yeniHesap);
+    _fcloseall();
     remove("hesaplar.txt");
     rename("yeniHesap.txt", "hesaplar.txt");
 
@@ -315,16 +322,268 @@ void havale(int musteriNo)
         time(&t);
         zaman = localtime(&t);
         dekont = fopen("dekont.txt", "a");
-        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year, hesapNo, "Havale", islemMiktari, havaleHesapNo);
+        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesapNo, "Havale", islemMiktari, havaleHesapNo);
         fclose(dekont);
     }
     else
         printf("\nHesap bulunamadi!");
     int anaMenu;
-    printf("Tekrar denemek için 1, ana menuye donmek icin herhangi bir tusa basiniz->");
+    printf("\nTekrar denemek icin 1, ana menuye donmek icin herhangi bir tusa basiniz->");
     scanf("%d", &anaMenu);
-    if (anaMenu)
-        havale(musteriNo);
+    if (anaMenu == 1)
+        havale(musteriNo, hesapNo);
+}
+
+int oturum_ac(int tip_no)
+{
+
+    FILE *hesap;
+    struct musteri oturum;
+
+    oturum.isim = malloc(sizeof(char) * 25);
+    oturum.soyisim = malloc(sizeof(char) * 25);
+
+    int musteri_no, musteri_no_sifre;
+    int musteri_no_onay = 0;
+    if (tip_no == 1)
+    {
+        do{
+            printf("Lutfen musteri numaranizi giriniz: ");
+            scanf("%d", &musteri_no);
+
+            hesap = fopen("bireyselMusteri.txt", "r");
+
+            while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
+            {
+
+                if (musteri_no == oturum.musteriID)
+                {
+                    musteri_no_onay = 1;
+                }
+            }
+            fclose(hesap);
+
+            if (musteri_no_onay != 1)
+            {
+                printf("Girdiginiz musteri no kayitli degil.\n");
+            }
+        }while(musteri_no_onay != 1);
+
+        printf("Girdiginiz musteri numarasinin sifresini giriniz: ");
+        scanf("%d", &musteri_no_sifre);
+
+        hesap = fopen("bireyselMusteri.txt", "r");
+
+        while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
+        {
+            if(oturum.musteriID == musteri_no)
+            {
+                if (musteri_no_sifre == oturum.sifre)
+                {
+                    musteri_no_onay = 1;
+                }
+                else
+                {
+                    musteri_no_onay = 0;
+                }
+            }
+
+        }
+        fclose(hesap);
+
+        if (musteri_no_onay != 1)
+        {
+            printf("Girdiginiz sifre yanlis. Tekrar oturum acmak uzere yonlendiriliyorsunuz...\n");
+            oturum_ac(1);
+        }
+    }
+
+    if (tip_no == 2)
+    {
+        do{
+            printf("Lutfen musteri numaranizi giriniz: ");
+            scanf("%d", &musteri_no);
+
+            hesap = fopen("ticariMusteri.txt", "r");
+
+            while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
+            {
+
+                if (musteri_no == oturum.musteriID)
+                {
+                    musteri_no_onay = 1;
+                }
+            }
+            fclose(hesap);
+
+            if (musteri_no_onay != 1)
+            {
+                printf("Girdiginiz musteri no kayitli degil.\n");
+            }
+        } while (musteri_no_onay != 1);
+
+        printf("Girdiginiz musteri numarasinin sifresini giriniz: ");
+        scanf("%d", &musteri_no_sifre);
+
+        hesap = fopen("ticariMusteri.txt", "r");
+
+        while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
+        {
+            if(oturum.musteriID == musteri_no)
+            {
+                if (musteri_no_sifre == oturum.sifre)
+                {
+                    musteri_no_onay = 1;
+                }
+                else
+                {
+                    musteri_no_onay = 0;
+                }
+            }
+        }
+        fclose(hesap);
+
+        if (musteri_no_onay != 1)
+        {
+            printf("Girdiginiz sifre yanlis. Tekrar oturum acmak uzere yonlendiriliyorsunuz...\n");
+            oturum_ac(1);
+        }
+    }
+
+    printf("\n\nGiris basarili.. Aktariliyorsunuz..\n\n");
+    return musteri_no;
+}
+
+void hesap_ac(int musteriId)
+{
+
+struct hesap hesap_ac;
+        FILE *hesap;
+
+
+        hesap = fopen("hesaplar.txt", "r+");
+        if (hesap == NULL) {
+
+            hesap_ac.hesapID = 1001;
+
+            hesap = fopen("hesaplar.txt", "w+");
+
+            printf("Hesap ID'niz otomatik olarak olusturuldu. Hesap ID: 1001\n");
+            printf("Bakiye --> 0 TL");
+
+            time(&t);
+            zaman = localtime(&t);
+            hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
+            fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, hesap_ac.hesapID, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
+        } else {
+
+
+
+        int tmp;
+        while (fscanf(hesap, "%d %d %d/%d/%d %f", &hesap_ac.musteriID, &hesap_ac.hesapID, &hesap_ac.acilmaTarihi.gun, &hesap_ac.acilmaTarihi.ay, &hesap_ac.acilmaTarihi.yil, &hesap_ac.bakiye) != EOF)
+        {
+            tmp = hesap_ac.hesapID;
+        }
+
+        tmp++;
+        printf("\nHesap ID'niz otomatik olarak olusturuldu. Hesap ID: %d\n", tmp);
+            printf("Bakiye --> 0 TL\n\n");
+            time(&t);
+            zaman = localtime(&t);
+            hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
+            fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, tmp, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
+        }
+        fclose(hesap);
+
+}
+
+int hesap_no_kontrol(int musteriID)
+{
+    FILE *hesap;
+    hesap = fopen("hesaplar.txt", "r+");
+    struct hesap hesap_ac;
+    int hesapID;
+    printf("\nLutfen islem yapmak istediginiz hesap no'yu giriniz:");
+    scanf("%d", &hesapID);
+
+    int boom = 0;
+    if (hesap == NULL)
+    {
+        printf("Böyle bir hesap bulunamadı.");
+    }
+    else
+    {
+        while (fscanf(hesap, "%d %d %d/%d/%d %f", &hesap_ac.musteriID, &hesap_ac.hesapID, &hesap_ac.acilmaTarihi.gun, &hesap_ac.acilmaTarihi.ay, &hesap_ac.acilmaTarihi.yil, &hesap_ac.bakiye) != EOF)
+        {
+            if (hesap_ac.musteriID == musteriID)
+            {
+                if (hesap_ac.hesapID == hesapID)
+                {
+                    printf("\nDogrulama basarili...");
+                    boom = 1;
+                    break;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+        }
+
+        if (boom != 1)
+        {
+            printf("Girdiginiz hesap no hatali. Lutfen tekrar deneyin.");
+            hesap_no_kontrol(musteriID);
+        }
+    }
+    fclose(hesap);
+    return hesapID;
+}
+
+void hesap_sil(int hesapID)
+{
+    FILE *hesap, *gecicihesap;
+    struct hesap hesapsil;
+    hesap = fopen("hesaplar.txt", "r+");
+    gecicihesap = fopen("hesaplartmp.txt", "w+");
+    if (hesap == NULL)
+    {
+        printf("Dosyayı acilamadi...");
+        exit(1);
+    }
+    while (fscanf(hesap, "%d %d %d/%d/%d %f", &hesapsil.musteriID, &hesapsil.hesapID, &hesapsil.acilmaTarihi.gun, &hesapsil.acilmaTarihi.ay, &hesapsil.acilmaTarihi.yil, &hesapsil.bakiye) != EOF)
+    {
+        if (hesapsil.hesapID == hesapID)
+        {
+            continue;
+        }
+        fprintf(gecicihesap, "%d %d %d/%d/%d %f\n", hesapsil.musteriID, hesapsil.hesapID, hesapsil.acilmaTarihi.gun, hesapsil.acilmaTarihi.ay, hesapsil.acilmaTarihi.yil, hesapsil.bakiye);
+    }
+    fclose(hesap);
+    fclose(gecicihesap);
+    remove("hesaplar.txt");
+    rename("hesaplartmp.txt", "hesaplar.txt");
+}
+
+void hesap_ozet(int hesapID)
+{
+    FILE *dekontac;
+    struct ozhesap ozethesap;
+    ozethesap.islemTuru = malloc(sizeof(char) * 25);
+    dekontac = fopen("dekont.txt", "r");
+    if (dekontac == NULL)
+    {
+        printf("Hesap ozetiniz bulunmamaktadir.");
+        exit(1);
+    }
+
+    while (fscanf(dekontac, "%d/%d/%d %d %s %f %d\n", &ozethesap.gun, &ozethesap.ay, &ozethesap.yil, &ozethesap.hesapNo, ozethesap.islemTuru, &ozethesap.bakiye, &ozethesap.havaleHesapNo)!= EOF)
+    {
+        if (ozethesap.hesapNo == hesapID)
+        {
+            printf("\n\n%d.%d.%d\t%d\t%s\t%f\t%d\n", ozethesap.gun, ozethesap.ay, ozethesap.yil, ozethesap.hesapNo, ozethesap.islemTuru, ozethesap.bakiye, ozethesap.havaleHesapNo);
+        }
+    }
 }
 
 int main()
@@ -425,6 +684,8 @@ int main()
 
                     srand(time(NULL));
                     okunan.musteriID = 55555 + rand() % 44444;
+                    okunan.limit = 750;
+                    okunan.limitTarihi.gun = zaman->tm_mday;
                     printf("\nMusteri No: %d dir.", okunan.musteriID);
                     printf("\nLutfen islem yapabilmek icin musteri no unutmayiniz!!!");
 
@@ -441,13 +702,13 @@ int main()
 
                     FILE *BirMus;
 
-                    BirMus = fopen("BireyselMusteri.txt", "a");
+                    BirMus = fopen("bireyselMusteri.txt", "a");
                     if (BirMus == NULL)
                     {
                         printf("Bireysel Musteri dosyasi acilamadi!");
                         exit(0);
                     }
-                    fprintf(BirMus, "\n%s\t%s\t%d.%d.%d\t%d\t%4d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre);
+                    fprintf(BirMus, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre, okunan.limit, okunan.limitTarihi.gun);
                     fclose(BirMus);
                     free(okunan.isim);
                     free(okunan.soyisim);
@@ -459,24 +720,34 @@ int main()
         }
         if (secim1 == 2)
         {
-            //Hesap giris.....
-            // profile giris yapildiktan sonra islem yapılması icin hesap acilmasi gerekir....
+            int oturum_tip_secimi;
+
+            printf("Musteri hesabinizin kayitli oldugu oldugu tipi seciniz.\n");
+            printf("\n(bireysel hesap icin 1, ticari hesap icin 2)\n");
+            scanf("%d", &oturum_tip_secimi);
+
+            musteri_id_cookie = oturum_ac(oturum_tip_secimi);
+
             printf(".... Hosgeldiniz");
 
             int secim2;
+            int musteri_no;
             printf("\n\nYeni hesap acmak icin bir(1)");
             printf("\n Var olan bir hesaba girmek icin ikiye(2) basiniz!");
-            scanf("%d", secim2);
+            scanf("%d", &secim2);
 
             if (secim2 == 1)
             {
-                // Yeni hesap acma islemleri gerceklesecek...
 
-                break;
+                hesap_ac(musteri_id_cookie);
+                secim2 = 2;
             }
             if (secim2 == 2)
             {
                 int secim3;
+
+                hesap_id_cookie = hesap_no_kontrol(musteri_id_cookie);
+
                 printf("\n\nLutfen yapmak istediginiz islemi seciniz!!!");
                 printf("\n\nHesabinizdan para cekme islemi icin (1)");
                 printf("\nHesabiniza para yatirmak icin (2)");
@@ -488,23 +759,23 @@ int main()
 
                 if (secim3 == 1)
                 {
-                    //PARA CEKME ISLEMLERI
+                    paraCekme(musteri_id_cookie, hesap_id_cookie);
                 }
                 if (secim3 == 2)
                 {
-                    //PARA YATIRMA ISLEMLERI
+                    paraYatirma(hesap_id_cookie);
                 }
                 if (secim3 == 3)
                 {
-                    //HAVALE ISLEMLERI
+                    havale(musteri_id_cookie, hesap_id_cookie);
                 }
                 if (secim3 == 4)
                 {
-                    //HESAP OZETI ISLEMLERI
+                    hesap_ozet(hesap_id_cookie);
                 }
                 if (secim3 == 5)
                 {
-                    //HESAP KAPAMA ISLEMLERI
+                    hesap_sil(hesap_id_cookie);
                 }
             }
 
