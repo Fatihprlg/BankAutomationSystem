@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <windows.h>
 #include <conio.h>
 
 time_t t;
@@ -68,7 +69,7 @@ int paraUstuTamamlama(int musteriNo, int hesapNo, float miktar)
 void paraCekme(int musteriNo, int hesapNo)
 {
     int hesapVar = 0, limit, tercih = 0, paraUstuKontrol = 0;
-    float islemMiktari;
+    float islemMiktari, dekontaYazilacak;
     FILE *musteri, *hesap, *yeniHesap, *dekont;
     struct hesap islem1;
     struct musteri okunan;
@@ -91,7 +92,6 @@ void paraCekme(int musteriNo, int hesapNo)
     }
     fclose(musteri);
 
-
     hesap = fopen("hesaplar.txt", "r");
     yeniHesap = fopen("islem1.txt", "w");
 
@@ -106,9 +106,10 @@ void paraCekme(int musteriNo, int hesapNo)
                 if (islemMiktari <= islem1.bakiye)
                 {
                     hesapVar = 1;
+                    dekontaYazilacak = islemMiktari;
                     islem1.bakiye -= islemMiktari;
                     printf("\nPara cekme islemi basarili");
-                    fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                    fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                 }
                 else
                 {
@@ -121,28 +122,31 @@ void paraCekme(int musteriNo, int hesapNo)
                         if (tamamlama)
                         {
                             paraUstuKontrol = 1;
+                            dekontaYazilacak = islemMiktari;
+                            islemMiktari -= islem1.bakiye;
                             islem1.bakiye = 0;
                             hesapVar = 1;
-                            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                         }
                         else
                         {
                             printf("\nHesaplarinizda yeterli bakiye bulunmamaktadır!!");
-                            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                         }
                     }
-                    fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                    else
+                        fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                 }
             }
             else
             {
                 printf("\nGunluk islem limitini astiniz!!!");
-                fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
             }
         }
         else
         {
-            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
         }
     }
 
@@ -157,31 +161,31 @@ void paraCekme(int musteriNo, int hesapNo)
         yeniHesap = fopen("yeniHesap.txt", "w");
         while (fscanf(hesap, "%d %d %d/%d/%d %f", &islem1.musteriID, &islem1.hesapID, &islem1.acilmaTarihi.gun, &islem1.acilmaTarihi.ay, &islem1.acilmaTarihi.yil, &islem1.bakiye) != EOF)
         {
-            if ((islem1.musteriID == musteriNo || islem1.hesapID != hesapNo) && islemMiktari != 0)
+            if (islem1.musteriID == musteriNo && islem1.hesapID != hesapNo && islemMiktari != 0)
             {
                 if (islem1.bakiye < islemMiktari)
                 {
                     islemMiktari -= islem1.bakiye;
                     islem1.bakiye = 0;
-                    fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                    fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                 }
                 else
                 {
                     islem1.bakiye -= islemMiktari;
                     islemMiktari = 0;
-                    fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                    fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
                 }
             }
             else
             {
-                fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
+                fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem1.musteriID, islem1.hesapID, islem1.acilmaTarihi.gun, islem1.acilmaTarihi.ay, islem1.acilmaTarihi.yil, islem1.bakiye);
             }
         }
         printf("\nPara cekme islemi basarili");
         fclose(hesap);
         fclose(yeniHesap);
         remove("hesaplar.txt");
-        rename("islem1.txt", "hesaplar.txt");
+        rename("yeniHesap.txt", "hesaplar.txt");
     }
 
     if (hesapVar)
@@ -189,7 +193,7 @@ void paraCekme(int musteriNo, int hesapNo)
         time(&t);
         zaman = localtime(&t);
         dekont = fopen("dekont.txt", "a");
-        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesapNo, "Para_cekme", 0 - islemMiktari, 0);
+        fprintf(dekont, "%d/%d/%d %d %s %f %d\n", zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesapNo, "Para_cekme", 0 - dekontaYazilacak, 0);
         fclose(dekont);
     }
     else
@@ -221,11 +225,11 @@ void paraYatirma(int hesapNo)
             scanf("%f", &islemMiktari);
             islem2.bakiye += islemMiktari;
             printf("\nPara yatirma islemi basarili!");
-            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
         }
         else
         {
-            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem2.musteriID, islem2.hesapID, islem2.acilmaTarihi.gun, islem2.acilmaTarihi.ay, islem2.acilmaTarihi.yil, islem2.bakiye);
         }
     }
     fclose(hesap);
@@ -304,7 +308,7 @@ void havale(int musteriNo, int hesapNo)
                 islem3.bakiye += islemMiktari;
                 printf("\nHavale islemi basarili!");
             }
-            fprintf(yeniHesap, "%d %d %d/%d/%d %f", islem3.musteriID, islem3.hesapID, islem3.acilmaTarihi.gun, islem3.acilmaTarihi.ay, islem3.acilmaTarihi.yil, islem3.bakiye);
+            fprintf(yeniHesap, "%d %d %d/%d/%d %f\n", islem3.musteriID, islem3.hesapID, islem3.acilmaTarihi.gun, islem3.acilmaTarihi.ay, islem3.acilmaTarihi.yil, islem3.bakiye);
         }
         fclose(hesap);
         fclose(yeniHesap);
@@ -347,7 +351,8 @@ int oturum_ac(int tip_no)
     int musteri_no_onay = 0;
     if (tip_no == 1)
     {
-        do{
+        do
+        {
             printf("Lutfen musteri numaranizi giriniz: ");
             scanf("%d", &musteri_no);
 
@@ -367,7 +372,7 @@ int oturum_ac(int tip_no)
             {
                 printf("Girdiginiz musteri no kayitli degil.\n");
             }
-        }while(musteri_no_onay != 1);
+        } while (musteri_no_onay != 1);
 
         printf("Girdiginiz musteri numarasinin sifresini giriniz: ");
         scanf("%d", &musteri_no_sifre);
@@ -376,7 +381,7 @@ int oturum_ac(int tip_no)
 
         while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
         {
-            if(oturum.musteriID == musteri_no)
+            if (oturum.musteriID == musteri_no)
             {
                 if (musteri_no_sifre == oturum.sifre)
                 {
@@ -387,7 +392,6 @@ int oturum_ac(int tip_no)
                     musteri_no_onay = 0;
                 }
             }
-
         }
         fclose(hesap);
 
@@ -400,7 +404,8 @@ int oturum_ac(int tip_no)
 
     if (tip_no == 2)
     {
-        do{
+        do
+        {
             printf("Lutfen musteri numaranizi giriniz: ");
             scanf("%d", &musteri_no);
 
@@ -429,7 +434,7 @@ int oturum_ac(int tip_no)
 
         while (fscanf(hesap, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d", oturum.isim, oturum.soyisim, &oturum.dogumTarihi.gun, &oturum.dogumTarihi.ay, &oturum.dogumTarihi.yil, &oturum.musteriID, &oturum.sifre, &oturum.limit, &oturum.limitTarihi.gun) != EOF)
         {
-            if(oturum.musteriID == musteri_no)
+            if (oturum.musteriID == musteri_no)
             {
                 if (musteri_no_sifre == oturum.sifre)
                 {
@@ -457,27 +462,27 @@ int oturum_ac(int tip_no)
 void hesap_ac(int musteriId)
 {
 
-struct hesap hesap_ac;
-        FILE *hesap;
+    struct hesap hesap_ac;
+    FILE *hesap;
 
+    hesap = fopen("hesaplar.txt", "r+");
+    if (hesap == NULL)
+    {
 
-        hesap = fopen("hesaplar.txt", "r+");
-        if (hesap == NULL) {
+        hesap_ac.hesapID = 1001;
 
-            hesap_ac.hesapID = 1001;
+        hesap = fopen("hesaplar.txt", "w+");
 
-            hesap = fopen("hesaplar.txt", "w+");
+        printf("Hesap ID'niz otomatik olarak olusturuldu. Hesap ID: 1001\n");
+        printf("Bakiye --> 0 TL");
 
-            printf("Hesap ID'niz otomatik olarak olusturuldu. Hesap ID: 1001\n");
-            printf("Bakiye --> 0 TL");
-
-            time(&t);
-            zaman = localtime(&t);
-            hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
-            fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, hesap_ac.hesapID, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
-        } else {
-
-
+        time(&t);
+        zaman = localtime(&t);
+        hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
+        fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, hesap_ac.hesapID, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
+    }
+    else
+    {
 
         int tmp;
         while (fscanf(hesap, "%d %d %d/%d/%d %f", &hesap_ac.musteriID, &hesap_ac.hesapID, &hesap_ac.acilmaTarihi.gun, &hesap_ac.acilmaTarihi.ay, &hesap_ac.acilmaTarihi.yil, &hesap_ac.bakiye) != EOF)
@@ -487,14 +492,13 @@ struct hesap hesap_ac;
 
         tmp++;
         printf("\nHesap ID'niz otomatik olarak olusturuldu. Hesap ID: %d\n", tmp);
-            printf("Bakiye --> 0 TL\n\n");
-            time(&t);
-            zaman = localtime(&t);
-            hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
-            fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, tmp, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
-        }
-        fclose(hesap);
-
+        printf("Bakiye --> 0 TL\n\n");
+        time(&t);
+        zaman = localtime(&t);
+        hesap_ac.bakiye = 0; //yeni acilan hesap bakiye 0
+        fprintf(hesap, "%d %d %d/%d/%d %f\n", musteriId, tmp, zaman->tm_mday, zaman->tm_mon, zaman->tm_year + 1900, hesap_ac.bakiye);
+    }
+    fclose(hesap);
 }
 
 int hesap_no_kontrol(int musteriID)
@@ -577,12 +581,135 @@ void hesap_ozet(int hesapID)
         exit(1);
     }
 
-    while (fscanf(dekontac, "%d/%d/%d %d %s %f %d\n", &ozethesap.gun, &ozethesap.ay, &ozethesap.yil, &ozethesap.hesapNo, ozethesap.islemTuru, &ozethesap.bakiye, &ozethesap.havaleHesapNo)!= EOF)
+    while (fscanf(dekontac, "%d/%d/%d %d %s %f %d\n", &ozethesap.gun, &ozethesap.ay, &ozethesap.yil, &ozethesap.hesapNo, ozethesap.islemTuru, &ozethesap.bakiye, &ozethesap.havaleHesapNo) != EOF)
     {
         if (ozethesap.hesapNo == hesapID)
         {
             printf("\n\n%d.%d.%d\t%d\t%s\t%f\t%d\n", ozethesap.gun, ozethesap.ay, ozethesap.yil, ozethesap.hesapNo, ozethesap.islemTuru, ozethesap.bakiye, ozethesap.havaleHesapNo);
         }
+    }
+}
+
+void musteriEkleme()
+{
+    typedef struct musteri musteri;
+    int musteriTipi;
+    time(&t);
+    zaman = localtime(&t);
+    while (1)
+    {
+        Sleep(1000);
+        system("cls");
+        printf("\n\n\tLutfen sahip olmak istediginiz musteri tipini seciniz!\n\n");
+        printf("\t~~~~~~~~~~~~~~~~~~\n");
+        printf("\t~~    Ticari Musteri icin bir(1)                  ~~\n");
+        printf("\t~~    Bireysel Musteri icin ikiye(2) basiniz      ~~\n");
+        printf("\t~~    Cikis (3)                                   ~~\n");
+        printf("\t~~~~~~~~~~~~~~~~~~\n");
+
+        printf("-->");
+        scanf("%d", &musteriTipi);
+
+        if (musteriTipi == 1)
+        {
+            musteri okunan;
+            okunan.isim = (char *)malloc(sizeof(char) * 25);
+            printf("\nIsminizi giriniz:");
+            scanf("%s", okunan.isim);
+            okunan.soyisim = (char *)malloc(sizeof(char) * 25);
+            printf("\nSoy isminizi giriniz:");
+            scanf("%s", okunan.soyisim);
+            printf("\nDogum Gununuzu giriniz:");
+            scanf("%d", &okunan.dogumTarihi.gun);
+            printf("\nDogum Ayinizi giriniz:");
+            scanf("%d", &okunan.dogumTarihi.ay);
+            printf("\nDogum Yilinizi giriniz:");
+            scanf("%d", &okunan.dogumTarihi.yil);
+
+            srand(time(NULL));
+            okunan.musteriID = 10000 + rand() % 45555;
+            okunan.limit = 1500;
+            okunan.limitTarihi.gun = zaman->tm_mday;
+            printf("\nMusteri No: %d dir.", okunan.musteriID);
+            printf("\nLutfen islem yapabilmek icin musteri no unutmayiniz!!!");
+            while (1)
+            {
+                printf("\n\nLutfen profilniz icin dort haneli bir sifre belirleyiniz!!!");
+                printf("\n-->");
+                scanf("%d", &okunan.sifre);
+                if (!(okunan.sifre > 9999 || okunan.sifre < 1000))
+                    break;
+                else
+                    printf("Sifre kurallara uymuyor!! Lutfen tekrar deneyiniz!");
+            }
+
+            FILE *ticMus;
+
+            ticMus = fopen("ticariMusteri.txt", "a");
+            if (ticMus == NULL)
+            {
+                printf("Ticari Musteri dosyasi acilamadi!");
+                exit(0);
+            }
+            fprintf(ticMus, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre, okunan.limit, okunan.limitTarihi.gun);
+            printf("\n\n.....Musteri ekleme islemi basarili bir sekilde gerceklesmistir.....\n\n");
+
+            fclose(ticMus);
+            free(okunan.isim);
+            free(okunan.soyisim);
+
+            break;
+        }
+        if (musteriTipi == 2)
+        {
+            musteri okunan;
+            okunan.isim = (char *)malloc(sizeof(char) * 25);
+            printf("\nIsminizi giriniz:");
+            scanf("%s", okunan.isim);
+            okunan.soyisim = (char *)malloc(sizeof(char) * 25);
+            printf("\nSoy isminizi giriniz:");
+            scanf("%s", okunan.soyisim);
+            printf("\nDogum Gununuzu giriniz:");
+            scanf("%d", &okunan.dogumTarihi.gun);
+            printf("\nDogum Ayinizi giriniz:");
+            scanf("%d", &okunan.dogumTarihi.ay);
+            printf("\nDogum Yilinizi giriniz:");
+            scanf("%d", &okunan.dogumTarihi.yil);
+
+            srand(time(NULL));
+            okunan.musteriID = 55555 + rand() % 44444;
+            okunan.limit = 750;
+            okunan.limitTarihi.gun = zaman->tm_mday;
+            printf("\nMusteri No: %d dir.", okunan.musteriID);
+            printf("\nLutfen islem yapabilmek icin musteri no unutmayiniz!!!");
+
+            while (1)
+            {
+                printf("\n\nLutfen profilniz icin dort haneli bir sifre belirleyiniz!!!");
+                printf("\n-->");
+                scanf("%d", &okunan.sifre);
+                if (!(okunan.sifre > 9999 || okunan.sifre < 1000))
+                    break;
+                else
+                    printf("Sifre kurallara uymuyor!! Lutfen tekrar deneyiniz!");
+            }
+
+            FILE *BirMus;
+
+            BirMus = fopen("bireyselMusteri.txt", "a");
+            if (BirMus == NULL)
+            {
+                printf("Bireysel Musteri dosyasi acilamadi!");
+                exit(0);
+            }
+            fprintf(BirMus, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre, okunan.limit, okunan.limitTarihi.gun);
+            fclose(BirMus);
+            free(okunan.isim);
+            free(okunan.soyisim);
+            break;
+        }
+        if (musteriTipi == 3)
+            break;
     }
 }
 
@@ -592,136 +719,24 @@ int main()
 
     while (1)
     {
-
+        system("cls");
         int secim1;
 
-        printf("Lutfen yapmak istediginiz secimi giriniz!\n");
-        printf("\nYeni musteri eklemek icin bir(1)");
-        printf("\nMusteri profiline girmek icin iki(2)");
-        printf("\nCikis icin uce (3) basiniz...");
-        printf("\n-->");
+        printf("\n\t=================================================");
+        printf("\n\t=\t 1.Yeni Musteri Ekleme  \t\t=\n\t=\t 2.Musteri Profiline Giris  \t\t=\n\t=\t 3.Cikis  \t\t\t\t=  ");
+        printf("\n\t=================================================");
+        printf("\n\n\tLutfen yukarida bulunan seceklerden yapmak istediginizi seciniz:\n");
+        printf("-->");
         scanf("%d", &secim1);
 
         if (secim1 == 1)
         {
-            typedef struct musteri musteri;
-            int musteriTipi;
-            time(&t);
-            zaman = localtime(&t);
-            while (1)
-            {
-                printf("\n\nLutfen sahip olmak istediginiz musteri tipini seciniz!\n");
-                printf("Ticari Musteri icin bir(1)");
-                printf("\nBireysel Musteri icin ikiye(2) basiniz");
-                printf("\nCikis (3)\n");
-                scanf("%d", &musteriTipi);
-
-                if (musteriTipi == 1)
-                {
-                    musteri okunan;
-                    okunan.isim = (char *)malloc(sizeof(char) * 25);
-                    printf("\nIsminizi giriniz:");
-                    scanf("%s", okunan.isim);
-                    okunan.soyisim = (char *)malloc(sizeof(char) * 25);
-                    printf("\nSoy isminizi giriniz:");
-                    scanf("%s", okunan.soyisim);
-                    printf("\nDogum Gununuzu giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.gun);
-                    printf("\nDogum Ayinizi giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.ay);
-                    printf("\nDogum Yilinizi giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.yil);
-
-                    srand(time(NULL));
-                    okunan.musteriID = 10000 + rand() % 45555;
-                    okunan.limit = 1500;
-                    okunan.limitTarihi.gun = zaman->tm_mday;
-                    printf("\nMusteri No: %d dir.", okunan.musteriID);
-                    printf("\nLutfen islem yapabilmek icin musteri no unutmayiniz!!!");
-                    while (1)
-                    {
-                        printf("\n\nLutfen profilniz icin dort haneli bir sifre belirleyiniz!!!");
-                        printf("\n-->");
-                        scanf("%d", &okunan.sifre);
-                        if (!(okunan.sifre > 9999 || okunan.sifre < 1000))
-                            break;
-                        else
-                            printf("Sifre kurallara uymuyor!! Lutfen tekrar deneyiniz!");
-                    }
-
-                    FILE *ticMus;
-
-                    ticMus = fopen("ticariMusteri.txt", "a");
-                    if (ticMus == NULL)
-                    {
-                        printf("Ticari Musteri dosyasi acilamadi!");
-                        exit(0);
-                    }
-                    fprintf(ticMus, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre, okunan.limit, okunan.limitTarihi.gun);
-                    printf("\n\n.....Musteri ekleme islemi basarili bir sekilde gerceklesmistir.....\n\n");
-
-                    fclose(ticMus);
-                    free(okunan.isim);
-                    free(okunan.soyisim);
-
-                    break;
-                }
-                if (musteriTipi == 2)
-                {
-                    musteri okunan;
-                    okunan.isim = (char *)malloc(sizeof(char) * 25);
-                    printf("\nIsminizi giriniz:");
-                    scanf("%s", okunan.isim);
-                    okunan.soyisim = (char *)malloc(sizeof(char) * 25);
-                    printf("\nSoy isminizi giriniz:");
-                    scanf("%s", okunan.soyisim);
-                    printf("\nDogum Gununuzu giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.gun);
-                    printf("\nDogum Ayinizi giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.ay);
-                    printf("\nDogum Yilinizi giriniz:");
-                    scanf("%d", &okunan.dogumTarihi.yil);
-
-                    srand(time(NULL));
-                    okunan.musteriID = 55555 + rand() % 44444;
-                    okunan.limit = 750;
-                    okunan.limitTarihi.gun = zaman->tm_mday;
-                    printf("\nMusteri No: %d dir.", okunan.musteriID);
-                    printf("\nLutfen islem yapabilmek icin musteri no unutmayiniz!!!");
-
-                    while (1)
-                    {
-                        printf("\n\nLutfen profilniz icin dort haneli bir sifre belirleyiniz!!!");
-                        printf("\n-->");
-                        scanf("%d", &okunan.sifre);
-                        if (!(okunan.sifre > 9999 || okunan.sifre < 1000))
-                            break;
-                        else
-                            printf("Sifre kurallara uymuyor!! Lutfen tekrar deneyiniz!");
-                    }
-
-                    FILE *BirMus;
-
-                    BirMus = fopen("bireyselMusteri.txt", "a");
-                    if (BirMus == NULL)
-                    {
-                        printf("Bireysel Musteri dosyasi acilamadi!");
-                        exit(0);
-                    }
-                    fprintf(BirMus, "%s\t%s\t%d.%d.%d\t%d\t%d\t%d\t%d\n", okunan.isim, okunan.soyisim, okunan.dogumTarihi.gun, okunan.dogumTarihi.ay, okunan.dogumTarihi.yil, okunan.musteriID, okunan.sifre, okunan.limit, okunan.limitTarihi.gun);
-                    fclose(BirMus);
-                    free(okunan.isim);
-                    free(okunan.soyisim);
-                    break;
-                }
-                if (musteriTipi == 3)
-                    break;
-            }
+            musteriEkleme();
         }
         if (secim1 == 2)
         {
             int oturum_tip_secimi;
-
+            system("cls");
             printf("Musteri hesabinizin kayitli oldugu oldugu tipi seciniz.\n");
             printf("\n(bireysel hesap icin 1, ticari hesap icin 2)\n");
             scanf("%d", &oturum_tip_secimi);
@@ -738,14 +753,16 @@ int main()
 
             if (secim2 == 1)
             {
-
+                system("cls");
                 hesap_ac(musteri_id_cookie);
+                printf("\nYonlendiriliyorsunuz...");
+                Sleep(3000);
                 secim2 = 2;
             }
             if (secim2 == 2)
             {
                 int secim3;
-
+                system("cls");
                 hesap_id_cookie = hesap_no_kontrol(musteri_id_cookie);
 
                 printf("\n\nLutfen yapmak istediginiz islemi seciniz!!!");
@@ -759,22 +776,27 @@ int main()
 
                 if (secim3 == 1)
                 {
+                    system("cls");
                     paraCekme(musteri_id_cookie, hesap_id_cookie);
                 }
                 if (secim3 == 2)
                 {
+                    system("cls");
                     paraYatirma(hesap_id_cookie);
                 }
                 if (secim3 == 3)
                 {
+                    system("cls");
                     havale(musteri_id_cookie, hesap_id_cookie);
                 }
                 if (secim3 == 4)
                 {
+                    system("cls");
                     hesap_ozet(hesap_id_cookie);
                 }
                 if (secim3 == 5)
                 {
+                    system("cls");
                     hesap_sil(hesap_id_cookie);
                 }
             }

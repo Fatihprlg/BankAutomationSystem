@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1590266925 source:c:\users\fatih\documents\github\bankautomationsystem\bankautomation\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	<windows.h>
+	<conio.h>
+
